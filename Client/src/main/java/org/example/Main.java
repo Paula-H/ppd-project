@@ -45,7 +45,7 @@ public class Main {
                 buffer.add(data);
 
                 if (buffer.size() == Constants.BATCH_SIZE) {
-                    Request request = new Request(RequestType.SEND_PARTICIPANTS, buffer);
+                    Request request = new Request(RequestType.SEND_PARTICIPANTS, buffer, String.valueOf(countryCode));
                     var response = sendRequest(request);
 
                     if (response.getResponseType() == ResponseType.ERROR) {
@@ -58,9 +58,12 @@ public class Main {
                     Thread.sleep(Constants.DX * 1000);
                 }
             }
+            Request request = new Request(RequestType.GET_PARTIAL_COUNTRY_RANKING, null, String.valueOf(countryCode));
+            LOGGER.info("Sending to server the request for the partial countries ranking ... \n");
+            Response partialRankingResponse = sendRequest(request);
         }
         if (!buffer.isEmpty()) {
-            Request request = new Request(RequestType.SEND_PARTICIPANTS, buffer);
+            Request request = new Request(RequestType.SEND_PARTICIPANTS, buffer, String.valueOf(countryCode));
             var response = sendRequest(request);
 
             if (response.getResponseType() == ResponseType.ERROR) {
@@ -71,7 +74,7 @@ public class Main {
             buffer.clear();
         }
 
-        Request request = new Request(RequestType.GET_PARTIAL_COUNTRY_RANKING, null);
+        Request request = new Request(RequestType.GET_PARTIAL_COUNTRY_RANKING, null, String.valueOf(countryCode));
         LOGGER.info("Sending to server the request for the partial countries ranking ... \n");
         Response partialRankingResponse = sendRequest(request);
         var partialCountryResults = partialRankingResponse.getPartialCountryResults();
@@ -81,7 +84,7 @@ public class Main {
             LOGGER.info(countryRank.getCountry() + " " + countryRank.getScore());
         }
 
-        Request finalResultsRequest = new Request(RequestType.GET_FINAL_COUNTRY_RANKING, null);
+        Request finalResultsRequest = new Request(RequestType.GET_FINAL_COUNTRY_RANKING, null, String.valueOf(countryCode));
         Response finalRankingResponse = sendRequest(finalResultsRequest);
 
         while (finalRankingResponse.getResponseType() == ResponseType.ERROR) {

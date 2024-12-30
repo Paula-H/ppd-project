@@ -28,7 +28,7 @@ public class WorkerThread extends Thread{
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            if (element == null && countriesThatGotPartialRanking.get() < Constants.COUNTRIES) {
+            if (element == null && countriesThatGotPartialRanking.get() < Constants.COUNTRIES * (Constants.NO_OF_PROBLEMS + 1)) {
                 continue;
             }
             if (element == null) {

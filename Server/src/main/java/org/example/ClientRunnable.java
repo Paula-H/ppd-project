@@ -95,7 +95,7 @@ public class ClientRunnable implements Runnable{
                                     null));
                             out.flush();
                             countriesThatGotPartialRanking.incrementAndGet();
-                            if (countriesThatGotPartialRanking.get() == Constants.COUNTRIES) {
+                            if (countriesThatGotPartialRanking.get() == Constants.COUNTRIES * (Constants.NO_OF_PROBLEMS + 1)) {
                                 LOGGER.info("All countries finished sending their requests. Calculating final results ... \n");
                                 var participantsSorted = resultList.getSortedList();
                                 try (BufferedWriter bw = new BufferedWriter(new FileWriter("participantsRankingResults.txt"))) {
@@ -119,7 +119,7 @@ public class ClientRunnable implements Runnable{
                         }
                     }
                 } else if (request.getRequestType() == RequestType.GET_FINAL_COUNTRY_RANKING) {
-                    if (countriesThatGotPartialRanking.get() != Constants.COUNTRIES) {
+                    if (countriesThatGotPartialRanking.get() != (Constants.COUNTRIES * (Constants.NO_OF_PROBLEMS + 1))) {
                         LOGGER.info("Not all countries finished sending their requests. Sending error response ... \n");
                         out.writeObject(new Response(
                                 ResponseType.ERROR,
@@ -134,7 +134,7 @@ public class ClientRunnable implements Runnable{
                     FileWrapper finalParticipantsRanking = null;
                     try {
                         byte[] fileData = Files.readAllBytes(Path.of("participantsRankingResults.txt"));
-                        finalParticipantsRanking = new FileWrapper("participantsRankingResults.txt", fileData);
+                        finalParticipantsRanking = new FileWrapper("participantsRankingResultsForCountry" + request.getCountryCode() + ".txt", fileData);
                     } catch (IOException e) {
                         LOGGER.throwing(ClientRunnable.class.getName(), "run", e);
                     }
@@ -142,7 +142,7 @@ public class ClientRunnable implements Runnable{
                     FileWrapper finalCountriesRanking = null;
                     try {
                         byte[] fileData = Files.readAllBytes(Path.of("countriesRankingResults.txt"));
-                        finalCountriesRanking = new FileWrapper("countriesRankingResults.txt", fileData);
+                        finalCountriesRanking = new FileWrapper("countriesRankingResultsForCountry" + request.getCountryCode() + ".txt", fileData);
                     } catch (IOException e) {
                         LOGGER.throwing(ClientRunnable.class.getName(), "run", e);
                     }
