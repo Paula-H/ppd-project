@@ -18,6 +18,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Logger;
 
 public class ClientRunnable implements Runnable{
     private final ExecutorService executor;
@@ -27,6 +28,7 @@ public class ClientRunnable implements Runnable{
     private List<CountryRank> partialCountryResults;
     private AtomicInteger countriesThatGotPartialRanking;
     private AtomicInteger countriesThatGotFinalRanking;
+    private final Logger LOGGER = Logger.getLogger(ClientRunnable.class.getName());
 
     public ClientRunnable(
             ExecutorService executor,
@@ -46,11 +48,11 @@ public class ClientRunnable implements Runnable{
 
     @Override
     public void run() {
+        LOGGER.entering(ClientRunnable.class.getName(), "run");
         try (ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
              ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream()))
         {
             Request request = (Request) in.readObject();
-            System.out.println("Received request: " + request.getRequestType().toString());
             try {
                 if (request.getRequestType() == RequestType.SEND_PARTICIPANTS) {
                     var data = request.getData();
@@ -63,7 +65,7 @@ public class ClientRunnable implements Runnable{
                         try {
                             workingQueue.put(element);
                         } catch (InterruptedException e) {
-                            e.printStackTrace();
+                            LOGGER.throwing(ClientRunnable.class.getName(), "run", e);
                         }
                     });
                     out.writeObject(new Response(
@@ -85,6 +87,7 @@ public class ClientRunnable implements Runnable{
                         end = System.currentTimeMillis();
 
                         if (end - start < Constants.DT) {
+                            LOGGER.info("Sending partial country ranking to client ... \n");
                             out.writeObject(new Response(
                                     ResponseType.OK,
                                     partialCountryResults,
@@ -93,13 +96,14 @@ public class ClientRunnable implements Runnable{
                             out.flush();
                             countriesThatGotPartialRanking.incrementAndGet();
                             if (countriesThatGotPartialRanking.get() == Constants.COUNTRIES) {
+                                LOGGER.info("All countries finished sending their requests. Calculating final results ... \n");
                                 var participantsSorted = resultList.getSortedList();
                                 try (BufferedWriter bw = new BufferedWriter(new FileWriter("participantsRankingResults.txt"))) {
                                     for (var element : participantsSorted) {
                                         bw.write(element.participant + " " + element.score + " " + element.country + "\n");
                                     }
                                 } catch (IOException e) {
-                                    e.printStackTrace();
+                                    LOGGER.throwing(ClientRunnable.class.getName(), "run", e);
                                 }
 
                                 var countriesSorted = resultList.getCountryRanks();
@@ -108,7 +112,7 @@ public class ClientRunnable implements Runnable{
                                         bw.write(countryRank.getCountry() + " " + countryRank.getScore() + "\n");
                                     }
                                 } catch (IOException e) {
-                                    e.printStackTrace();
+                                    LOGGER.throwing(ClientRunnable.class.getName(), "run", e);
                                 }
                             }
                             break;
@@ -116,7 +120,13 @@ public class ClientRunnable implements Runnable{
                     }
                 } else if (request.getRequestType() == RequestType.GET_FINAL_COUNTRY_RANKING) {
                     if (countriesThatGotPartialRanking.get() != Constants.COUNTRIES) {
-                        out.writeObject(new Response(ResponseType.ERROR, null, null, null));
+                        LOGGER.info("Not all countries finished sending their requests. Sending error response ... \n");
+                        out.writeObject(new Response(
+                                ResponseType.ERROR,
+                                null,
+                                null,
+                                null
+                        ));
                         out.flush();
                         return;
                     }
@@ -126,7 +136,7 @@ public class ClientRunnable implements Runnable{
                         byte[] fileData = Files.readAllBytes(Path.of("participantsRankingResults.txt"));
                         finalParticipantsRanking = new FileWrapper("participantsRankingResults.txt", fileData);
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        LOGGER.throwing(ClientRunnable.class.getName(), "run", e);
                     }
 
                     FileWrapper finalCountriesRanking = null;
@@ -134,15 +144,16 @@ public class ClientRunnable implements Runnable{
                         byte[] fileData = Files.readAllBytes(Path.of("countriesRankingResults.txt"));
                         finalCountriesRanking = new FileWrapper("countriesRankingResults.txt", fileData);
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        LOGGER.throwing(ClientRunnable.class.getName(), "run", e);
                     }
-
+                    LOGGER.info("Sending final rankings to client ... \n");
                     out.writeObject(new Response(ResponseType.OK, resultList.getCountryRanks(), finalParticipantsRanking, finalCountriesRanking));
                     out.flush();
                     countriesThatGotFinalRanking.incrementAndGet();
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                LOGGER.info("Request could not be fulfilled. Sending error response ... \n");
+                LOGGER.throwing(ClientRunnable.class.getName(), "run", e);
                 out.writeObject(new Response(
                         ResponseType.ERROR,
                         null,
@@ -153,7 +164,7 @@ public class ClientRunnable implements Runnable{
             }
             clientSocket.close();
         } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
+            LOGGER.throwing(ClientRunnable.class.getName(), "run", e);
         }
     }
 }

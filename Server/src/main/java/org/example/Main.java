@@ -11,30 +11,33 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Logger;
 
 public class Main {
-    private static final int readers = 4;
-    private static final int writers = 8;
     private static final LinkedList resultList = new LinkedList();
-    private static final int PORT = 12345;
-    private static final ExecutorService executor = Executors.newFixedThreadPool(readers);
+    private static final ExecutorService executor = Executors.newFixedThreadPool(Constants.READERS);
     private static BlockingQueue<LinkedListElement> workingQueue = new LinkedBlockingQueue<>();
+    private static final Logger LOGGER = Logger.getLogger(Main.class.getName());
 
-    public static void main(String[] args) throws InterruptedException {
-        Thread[] writersThreads = new Thread[writers];
+    public static void main(String[] args) {
+        LOGGER.entering(Main.class.getName(), "main");
+
+        Thread[] writersThreads = new Thread[Constants.WRITERS];
 
         AtomicInteger countriesThatGotPartialRanking = new AtomicInteger(0);
         AtomicInteger countriesThatGotFinalRanking = new AtomicInteger(0);
 
-        for (int i = 0; i < writers; ++i) {
+        LOGGER.info("Initializing and starting writers ... \n");
+
+        for (int i = 0; i < Constants.WRITERS; ++i) {
             Thread thread = new WorkerThread(workingQueue, resultList, countriesThatGotPartialRanking);
             writersThreads[i] = thread;
         }
 
         Arrays.stream(writersThreads).forEach(Thread::start);
 
-        try (ServerSocket serverSocket = new ServerSocket(PORT)) {
-            System.out.println("Server started, listening on port " + PORT);
+        try (ServerSocket serverSocket = new ServerSocket(Constants.PORT)) {
+            LOGGER.info("Server started, listening on port " + Constants.PORT);
             while (countriesThatGotFinalRanking.get() != Constants.COUNTRIES) {
                 try {
                     final Socket clientSocket = serverSocket.accept();
@@ -49,18 +52,18 @@ public class Main {
                             ));
                     Thread.sleep(500);
                 } catch (IOException e) {
-                    System.err.println("Exception caught when trying to listen on port " + PORT + " or listening for a connection");
-                    System.err.println(e.getMessage());
+                    LOGGER.info("Exception caught when trying to listen on port " + Constants.PORT + ". Exiting ... \n");
+                    LOGGER.throwing(Main.class.getName(), "main", e);
                 } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
+                    LOGGER.throwing(Main.class.getName(), "main", e);
                 }
             }
         } catch (IOException e) {
-            System.err.println("Could not listen on port " + PORT);
-            System.err.println(e.getMessage());
+            LOGGER.info("Could not listen on port " + Constants.PORT + ". Exiting ... \n");
+            LOGGER.throwing(Main.class.getName(), "main", e);
         }
         finally {
-            System.out.println("Closing readers ... \n");
+            LOGGER.info("Closing readers ... \n");
             executor.shutdown();
         }
 
@@ -71,6 +74,6 @@ public class Main {
                 throw new RuntimeException(e);
             }
         });
-        System.out.println("Server stopped.");
+        LOGGER.info("Server stopped.");
     }
 }
