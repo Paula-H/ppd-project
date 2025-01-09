@@ -21,7 +21,7 @@ public class Main {
 
     public static void main(String[] args) {
         LOGGER.entering(Main.class.getName(), "main");
-
+        double startTime = System.currentTimeMillis();
         Thread[] writersThreads = new Thread[Constants.WRITERS];
 
         AtomicInteger countriesThatGotPartialRanking = new AtomicInteger(0);
@@ -74,6 +74,8 @@ public class Main {
                 throw new RuntimeException(e);
             }
         });
+        double endTime = System.currentTimeMillis();
+        System.out.println(endTime - startTime);
         LOGGER.info("Server stopped.");
     }
 }
