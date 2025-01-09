@@ -1,5 +1,6 @@
 package org.example;
 
+import org.example.logger.LoggerUtility;
 import org.example.request.Request;
 import org.example.request.RequestType;
 import org.example.response.Response;
@@ -9,13 +10,24 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 import java.net.Socket;
-import java.util.logging.Logger;
+import java.util.logging.*;
 
 public class Main {
     private static final List<String> files = new ArrayList<>();
-    private static final Logger LOGGER = Logger.getLogger(Main.class.getName());
+    private static Logger LOGGER;
 
     public static void main(String[] args) throws FileNotFoundException, InterruptedException {
+        try
+        {
+            int country=Integer.parseInt(args[0]);
+            LOGGER = LoggerUtility.getLogger(Main.class,country);
+        }
+        catch (NumberFormatException e)
+        {
+            LOGGER.throwing(Main.class.getName(), "main", new Exception("Invalid country code."));
+            System.exit(1);
+        }
+
         LOGGER.entering(Main.class.getName(), "main");
 
         if (args.length < 1) {

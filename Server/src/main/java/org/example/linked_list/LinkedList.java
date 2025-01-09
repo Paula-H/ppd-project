@@ -1,6 +1,8 @@
 package org.example.linked_list;
 
 import org.example.response.CountryRank;
+import org.example.utils.logger.LoggerUtility;
+
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -8,7 +10,7 @@ public class LinkedList implements LinkedListInterface {
     private LinkedListElement head;
     private LinkedListElement tail;
     private Set<String> blackList;
-    private final Logger LOGGER = Logger.getLogger(LinkedList.class.getName());
+    private final Logger LOGGER = LoggerUtility.getLogger(LinkedList.class);
 
     public LinkedList() {
         LOGGER.entering(LinkedList.class.getName(), "LinkedList");

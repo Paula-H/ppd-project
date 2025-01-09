@@ -2,6 +2,8 @@ package org.example;
 
 import org.example.linked_list.LinkedList;
 import org.example.linked_list.LinkedListElement;
+import org.example.utils.logger.LoggerUtility;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -11,13 +13,14 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Logger;
+import java.util.logging.*;
+
 
 public class Main {
     private static final LinkedList resultList = new LinkedList();
     private static final ExecutorService executor = Executors.newFixedThreadPool(Constants.READERS);
     private static BlockingQueue<LinkedListElement> workingQueue = new LinkedBlockingQueue<>();
-    private static final Logger LOGGER = Logger.getLogger(Main.class.getName());
+    private static final Logger LOGGER = LoggerUtility.getLogger(Main.class);
 
     public static void main(String[] args) {
         LOGGER.entering(Main.class.getName(), "main");

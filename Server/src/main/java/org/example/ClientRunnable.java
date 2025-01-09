@@ -8,6 +8,7 @@ import org.example.response.CountryRank;
 import org.example.response.FileWrapper;
 import org.example.response.Response;
 import org.example.response.ResponseType;
+import org.example.utils.logger.LoggerUtility;
 
 import java.io.*;
 import java.net.Socket;
@@ -28,7 +29,7 @@ public class ClientRunnable implements Runnable{
     private List<CountryRank> partialCountryResults;
     private AtomicInteger countriesThatGotPartialRanking;
     private AtomicInteger countriesThatGotFinalRanking;
-    private final Logger LOGGER = Logger.getLogger(ClientRunnable.class.getName());
+    private final Logger LOGGER = LoggerUtility.getLogger(ClientRunnable.class);
 
     public ClientRunnable(
             ExecutorService executor,
