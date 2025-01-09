@@ -4,6 +4,7 @@ import org.example.linked_list.LinkedList;
 import org.example.linked_list.LinkedListElement;
 import org.example.utils.logger.LoggerUtility;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -22,7 +23,7 @@ public class Main {
     private static BlockingQueue<LinkedListElement> workingQueue = new LinkedBlockingQueue<>();
     private static final Logger LOGGER = LoggerUtility.getLogger(Main.class);
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws FileNotFoundException {
         LOGGER.entering(Main.class.getName(), "main");
         double startTime = System.currentTimeMillis();
         Thread[] writersThreads = new Thread[Constants.WRITERS];
@@ -79,6 +80,7 @@ public class Main {
         });
         double endTime = System.currentTimeMillis();
         System.out.println(endTime - startTime);
+        FileWorker.assertEquality("participantsRankingResults.txt", "resultsSequential.txt");
         LOGGER.info("Server stopped.");
     }
 }
